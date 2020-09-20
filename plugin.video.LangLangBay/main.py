@@ -88,9 +88,9 @@ def playUrl(video_url):
 # home page
 mode = args.get('mode', None)
 if mode is None:
-    li = xbmcgui.ListItem(u'List'.encode('utf-8'))
-    url = build_url({'mode': 'List'})
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    # li = xbmcgui.ListItem(u'List'.encode('utf-8'))
+    # url = build_url({'mode': 'List'})
+    # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     li = xbmcgui.ListItem(u'Jp'.encode('utf-8'))
     url = build_url({'mode': 'J-List'})
@@ -108,13 +108,13 @@ if mode is None:
     url = build_url({'mode': 'T-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Search'.encode('utf-8'))
-    url = build_url({'mode': 'Search'})
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    # li = xbmcgui.ListItem(u'Search'.encode('utf-8'))
+    # url = build_url({'mode': 'Search'})
+    # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Test'.encode('utf-8'))
-    url = build_url({'mode': 'Test'})
-    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    # li = xbmcgui.ListItem(u'Test'.encode('utf-8'))
+    # url = build_url({'mode': 'Test'})
+    # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     xbmcplugin.endOfDirectory(addon_handle)
 
@@ -170,6 +170,7 @@ elif mode[0] == 'video-list':
     newUrl = urllib.unquote(args['path'][0])
     # print(newUrl)
     page = Get(newUrl)
+    sourceList = []
     # init regex search
     it = re.finditer("<a href=\"(.*?)\" data-data=\"(.*?)\"><strong>(.*?)</strong><small>(.*?)</small></a>", page, flags=0)
 
@@ -183,10 +184,19 @@ elif mode[0] == 'video-list':
         ref = jsonObj["ids"][0]
         if "Yun" in source:
             li = xbmcgui.ListItem(source)
-            url = build_url({'mode': source, 'path': "/a/m3u8/", 'ref': ref})
-            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
+            li.setProperty("ref", ref)
+            sourceList.append(li)
+            # url = build_url({'mode': source, 'path': "/a/m3u8/", 'ref': ref})
+            # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
+    
+    index = xbmcgui.Dialog().select("Choose Source", sourceList)
 
-    xbmcplugin.endOfDirectory(addon_handle)
+    if index != -1:
+        newPage = Get(langlangbayUrl + "/a/m3u8/?ref=" + sourceList[index].getProperty("ref"))
+        result = re.search("var m3u8url = '(.*?)'", newPage, flags=0)
+        playUrl(urllib.unquote(urllib.unquote(result.group(1))))
+
+    # xbmcplugin.endOfDirectory(addon_handle)
 
 elif mode[0] == 'dailymotion':
     playUrl("plugin://plugin.video.dailymotion_com/?mode=playVideo&url=" + args['path'][0])
@@ -204,13 +214,6 @@ elif mode[0] == 'rapidvideo':
     matchObj = re.search("src=\"(https:\/\/.*?mp4)\"", page, flags=0)
     # get video url
     playUrl(matchObj.group(1))
-
-elif "Yun" in mode[0]:
-    # print("path in Yun is " + args['path'][0])
-    newUrl = urllib.unquote(langlangbayUrl + args['path'][0]+"?ref="+args['ref'][0])
-    page = Get(newUrl)
-    matchObj = re.search("var m3u8url = '(.*?)'", page, flags=0)
-    playUrl(urllib.unquote(urllib.unquote(matchObj.group(1))))
 
 else:
     xbmcgui.Dialog().ok(u'is developing'.encode('utf-8'),args['path'][0].encode('utf-8'))
