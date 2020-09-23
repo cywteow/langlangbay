@@ -31,6 +31,8 @@ print("args is ")
 print(args)
 
 langlangbayUrl = "https://langlangbay.org"
+chinaqUrl = "https://chinaq.tv"
+arabUrl = "https://arabnewsworld.com"
 
 xbmcplugin.setContent(addon_handle, 'movies')
 
@@ -66,6 +68,30 @@ def genList(url):
 
     xbmcplugin.endOfDirectory(addon_handle)
 
+def genListForCountry(country):
+    # download pages
+    page = Get(langlangbayUrl + "/all.html")
+
+    pattern = "<li name=\"all"+country+"(.*?)\"><a href=\"(.*?)\">(.*?)</a></li>"
+    # init regex search
+    it = re.finditer(pattern, page, flags=0)
+    # add to list
+    for matchObj in it:
+        li = xbmcgui.ListItem(matchObj.group(3))
+        path = matchObj.group(2)
+        if chinaqUrl in path:
+            result = re.search(chinaqUrl+"(.*?$)", path, flags=0)
+            if result:
+                url = build_url({'mode': 'video-info-all', 'path': result.group(1)})
+        else:
+            url = build_url({'mode': 'video-info', 'path': matchObj.group(2)})
+
+        if url:
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+        print("err")
+
+    xbmcplugin.endOfDirectory(addon_handle)
+
 # decode
 def ttdecode(code):
     # print code
@@ -92,21 +118,39 @@ if mode is None:
     # url = build_url({'mode': 'List'})
     # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Jp'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent Jp'.encode('utf-8'))
     url = build_url({'mode': 'J-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Kr'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent Kr'.encode('utf-8'))
     url = build_url({'mode': 'K-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'CN'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent CN'.encode('utf-8'))
     url = build_url({'mode': 'C-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'TW'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent TW'.encode('utf-8'))
     url = build_url({'mode': 'T-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+    li = xbmcgui.ListItem(u'All Jp'.encode('utf-8'))
+    url = build_url({'mode': 'All Jp'})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+    li = xbmcgui.ListItem(u'All Kr'.encode('utf-8'))
+    url = build_url({'mode': 'All Kr'})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+    li = xbmcgui.ListItem(u'All Cn'.encode('utf-8'))
+    url = build_url({'mode': 'All Cn'})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+    li = xbmcgui.ListItem(u'All Tw'.encode('utf-8'))
+    url = build_url({'mode': 'All Tw'})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+
 
     # li = xbmcgui.ListItem(u'Search'.encode('utf-8'))
     # url = build_url({'mode': 'Search'})
@@ -118,8 +162,20 @@ if mode is None:
 
     xbmcplugin.endOfDirectory(addon_handle)
 
-elif mode[0] == 'List':
-    genList(langlangbayUrl)
+elif mode[0] == 'Recently update':
+    genList(langlangbayUrl + "/update.html")
+
+elif mode[0] == 'All Jp':
+    genListForCountry("jp")
+
+elif mode[0] == 'All Kr':
+    genListForCountry("kr")
+
+elif mode[0] == 'All Cn':
+    genListForCountry("cn")
+
+elif mode[0] == 'All Tw':
+    genListForCountry("tw")
 
 elif mode[0] == 'K-List':
     genList(langlangbayUrl + "/kr/")
@@ -136,9 +192,14 @@ elif mode[0] == 'T-List':
 #Listing of video eps
 elif mode[0] == 'video-info':
     #eg. path = /cn200827/
-    newUrl = langlangbayUrl + args['path'][0]
+    
     # download pages
-    page = Get(newUrl)
+    try:
+        newUrl = arabUrl + args['path'][0]
+        page = Get(newUrl)
+    except:
+        newUrl = chinaqUrl + args['path'][0]
+        page = Get(newUrl)
     # init regex search
     count = 0
     it = re.finditer("<li class=\"sizing\"><h2><a rel=\"nofollow noopener noreferrer\" onclick=\"xxx\('(.*?)','(.*?)',(.*)>(.*?)</a>", page, flags=0)
@@ -162,6 +223,40 @@ elif mode[0] == 'video-info':
             xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     xbmcplugin.endOfDirectory(addon_handle)
+
+#Listing of video eps
+elif mode[0] == 'video-info-all':
+    #eg. path = /cn200827/
+    newUrl = chinaqUrl + args['path'][0]
+    # download pages
+    page = Get(newUrl)
+    # init regex search
+    count = 0
+    it = re.finditer("<li class=\"sizing\"><h2><a rel=\"nofollow noopener noreferrer\" onclick=\"xxx\('(.*?)','(.*?)',(.*)>(.*?)</a>", page, flags=0)
+
+    # add to list
+    for matchObj in it:
+        li = xbmcgui.ListItem(matchObj.group(4))
+        path = chinaqUrl + matchObj.group(2) + ".html"
+        # print("path to video-list is "+ path)
+        url = build_url({'mode': 'video-list', 'path': path})
+        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+        count += 1
+
+    if(count == 0):
+        it = re.finditer("<li class=\"sizing\"><h2><a href=\"(.*?).html\">(.*?)</a></h2></li>", page, flags=0)
+        for matchObj in it:
+            li = xbmcgui.ListItem(matchObj.group(2))
+            if args['path'][0] in matchObj.group(1):
+                path = chinaqUrl + matchObj.group(1) + ".html"
+            else:
+                path = chinaqUrl + args['path'][0] + matchObj.group(1) + ".html"
+            # print("path to video-list is "+ path)
+            url = build_url({'mode': 'video-list', 'path': path})
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
+    xbmcplugin.endOfDirectory(addon_handle)
+
 #Listing of video sources
 elif mode[0] == 'video-list':
     # print("path in video-list is " + args['path'][0])
@@ -181,11 +276,19 @@ elif mode[0] == 'video-list':
         decoded = base64.b64decode(encryptedString)
         jsonObj = json.loads(decoded)
         source = jsonObj["source"]
-        ref = jsonObj["ids"][0]
+        ref = jsonObj["ids"]
         if "Yun" in source:
-            li = xbmcgui.ListItem(source)
-            li.setProperty("ref", ref)
-            sourceList.append(li)
+            if len(ref) > 1:
+                count = 1
+                for refItem in ref:
+                    li = xbmcgui.ListItem(source+" Part "+ str(count))
+                    li.setProperty("ref", refItem)
+                    sourceList.append(li)
+                    count += 1
+            else:
+                li = xbmcgui.ListItem(source)
+                li.setProperty("ref", ref[0])
+                sourceList.append(li)
             # url = build_url({'mode': source, 'path': "/a/m3u8/", 'ref': ref})
             # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
     

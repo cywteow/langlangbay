@@ -24,16 +24,16 @@ path = "test"
 #     path = matchObj.group(1)
 #     break
 
-page2 = Get(langlangbayUrl + "/cn200910/")
-it3 = re.finditer("<li class=\"sizing\"><h2><a rel=\"nofollow noopener noreferrer\" onclick=\"xxx\('(.*?)','(.*?)',(.*)>(.*?)</a>", page2, flags=0)
-count = 0
-for matchObj2 in it3:
-    print(matchObj2.group(4)+", "+matchObj2.group(2))
-    count += 1
-if(count == 0):
-    it3 = re.finditer("<li class=\"sizing\"><h2><a href=\"(.*?).html\">(.*?)</a></h2></li>",page2,flags=0)
-    for matchObj2 in it3:
-        print(matchObj2.group(2) + " - " + matchObj2.group(1))
+# page2 = Get(langlangbayUrl + "/cn200910/")
+# it3 = re.finditer("<li class=\"sizing\"><h2><a rel=\"nofollow noopener noreferrer\" onclick=\"xxx\('(.*?)','(.*?)',(.*)>(.*?)</a>", page2, flags=0)
+# count = 0
+# for matchObj2 in it3:
+#     print(matchObj2.group(4)+", "+matchObj2.group(2))
+#     count += 1
+# if(count == 0):
+#     it3 = re.finditer("<li class=\"sizing\"><h2><a href=\"(.*?).html\">(.*?)</a></h2></li>",page2,flags=0)
+#     for matchObj2 in it3:
+#         print(matchObj2.group(2) + " - " + matchObj2.group(1))
 
 # encryptedString = "==QfdJCNVNTT0VzQlxmUtJGc5MkT0kFVNpXSt5ka5wWT4tGVPZ3ZU1UNBRUT5FkaNZHMyIma1MVWrx2VkZDZtJmdoJjW1lzRaVHNXlVaWNjYrlTeMZTTINGMShUYRRWcE9lIbpjIzRWaiwiIuVXWaJiOiU2YyV3bzJye"
 # encryptedString = "test"
@@ -52,3 +52,7 @@ if(count == 0):
 # matchObj4 = re.search("var m3u8url = '(.*?)'", page, flags=0)
 # print(matchObj4.group(1))
 
+encryptedString = "=0XXiQTVz0Ed1MUZsJVbiBXO55kbKFDZUZ1VkxWOp10dJRVT0UERNlHOTJmdO1GToJ1VhFDczIGao1GTolzVZ9WO5xkNNh0YwIFShFFZxR0XiwiI0U1MNRXNDVGbS1mYwlzQjJjSU1kVShkTElzUPdXSU10MFRUT5hzUiZnTtxUNGdkWwZlblFTVqxEcshVY1kTeMZTTINGMShUYRRWcE9lIbpjIzRWaiwiIuVXWaJiOiU2YyV3bzJye"
+encryptedString = encryptedString[::-1]
+decoded = base64.b64decode(encryptedString)
+print(decoded)
