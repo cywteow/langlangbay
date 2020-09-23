@@ -1,7 +1,3 @@
-# Overview
-
-A kodi add-on to watch drama from langlangbay.org
-
 # Installation
 1) Download as zip
 2) Transfer the zip file into your kodi via file manager/file explorer
