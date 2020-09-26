@@ -4,18 +4,59 @@ import re
 import sys
 import urllib
 import base64
-
 import urllib2
 import urlparse
+
+from bs4 import BeautifulSoup
+
 
 def Get(url):
     req = urllib2.Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0)')
-    return urllib2.urlopen(req).read()
+    response = urllib2.urlopen(req)
+    return response
 
 langlangbayUrl = "https://langlangbay.org"
 
-path = "test"
+
+
+
+soup = BeautifulSoup(Get("https://arabnewsworld.com/cn200913/").read(), 'html.parser')
+description = soup.find('div', class_="description")
+plot = ""
+for element in description.contents:
+    if element.name == "font":
+        plot = plot[:-1]
+        plot += element.string.encode('utf-8').strip() + "\n"
+    elif element.name != "br":
+        plot += element.encode('utf-8').strip() + "\n"
+
+f = open("test.html", "w")
+f.write(plot)
+f.close()
+    # if element.encode('utf-8') != "<br/>" || :
+    #     plot += element.encode('utf-8')
+
+# for item in aTag:
+    # pattern = "xxx\(\'(.*?)\',\'(.*?)\',(.*?)\);return false;"
+    # if item.has_attr('onclick'):
+    #     onclick = item['onclick']
+    #     result = re.search(pattern, onclick, flags=0)
+    #     title = item.string.encode('utf-8')
+    #     print(result.group(2))
+    #     print(title)
+    # print(item['data-data'])
+    
+
+# result = soup.find('ul', class_='drama_rich clearfix').find_all('div', class_='txttitle')
+
+# for div in result:
+#     result2 = div.find('a')
+#     print(result2['href'])
+
+# print(soup.prettify('utf-8'))
+
+# path = "test"
 
 # page = Get(langlangbayUrl + "/cn/")
 # it = re.finditer("<a href=\"(.*?)\">\n\t\t\t\t\t\t<div class=\"title sizing\">(.*?)</div>", page, flags=0)
@@ -24,15 +65,18 @@ path = "test"
 #     path = matchObj.group(1)
 #     break
 
-# page2 = Get(langlangbayUrl + "/cn200910/")
+# print(settings['langlangbay']['url'])
+
+# page2 = Get(settings['langlangbay']['url'] + "/cn200913/")
 # it3 = re.finditer("<li class=\"sizing\"><h2><a rel=\"nofollow noopener noreferrer\" onclick=\"xxx\('(.*?)','(.*?)',(.*)>(.*?)</a>", page2, flags=0)
-# count = 0
+# matchObj2 = None
 # for matchObj2 in it3:
+#     print('test')
 #     print(matchObj2.group(4)+", "+matchObj2.group(2))
-#     count += 1
-# if(count == 0):
+# if(matchObj2 is None):
 #     it3 = re.finditer("<li class=\"sizing\"><h2><a href=\"(.*?).html\">(.*?)</a></h2></li>",page2,flags=0)
 #     for matchObj2 in it3:
+#         print('test2')
 #         print(matchObj2.group(2) + " - " + matchObj2.group(1))
 
 # encryptedString = "==QfdJCNVNTT0VzQlxmUtJGc5MkT0kFVNpXSt5ka5wWT4tGVPZ3ZU1UNBRUT5FkaNZHMyIma1MVWrx2VkZDZtJmdoJjW1lzRaVHNXlVaWNjYrlTeMZTTINGMShUYRRWcE9lIbpjIzRWaiwiIuVXWaJiOiU2YyV3bzJye"
@@ -52,7 +96,7 @@ path = "test"
 # matchObj4 = re.search("var m3u8url = '(.*?)'", page, flags=0)
 # print(matchObj4.group(1))
 
-encryptedString = "=0XXiQTVz0Ed1MUZsJVbiBXO55kbKFDZUZ1VkxWOp10dJRVT0UERNlHOTJmdO1GToJ1VhFDczIGao1GTolzVZ9WO5xkNNh0YwIFShFFZxR0XiwiI0U1MNRXNDVGbS1mYwlzQjJjSU1kVShkTElzUPdXSU10MFRUT5hzUiZnTtxUNGdkWwZlblFTVqxEcshVY1kTeMZTTINGMShUYRRWcE9lIbpjIzRWaiwiIuVXWaJiOiU2YyV3bzJye"
-encryptedString = encryptedString[::-1]
-decoded = base64.b64decode(encryptedString)
-print(decoded)
+# encryptedString = "=0XXiQTVz0Ed1MUZsJVbiBXO55kbKFDZUZ1VkxWOp10dJRVT0UERNlHOTJmdO1GToJ1VhFDczIGao1GTolzVZ9WO5xkNNh0YwIFShFFZxR0XiwiI0U1MNRXNDVGbS1mYwlzQjJjSU1kVShkTElzUPdXSU10MFRUT5hzUiZnTtxUNGdkWwZlblFTVqxEcshVY1kTeMZTTINGMShUYRRWcE9lIbpjIzRWaiwiIuVXWaJiOiU2YyV3bzJye"
+# encryptedString = encryptedString[::-1]
+# decoded = base64.b64decode(encryptedString)
+# print(decoded)
