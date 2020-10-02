@@ -96,10 +96,14 @@ def playUrl(video_url):
     playlist.add(url=video_url, listitem=li)
     xbmc.Player().play(playlist)
 
+def playResolvedUrl(url):
+    li = xbmcgui.ListItem(path=url)
+    xbmcplugin.setResolvedUrl(addon_handle, True, li)
+
 def getDescription(page):
     plot = ""
     try:
-        soul = BeautifulSoup(page, 'html.parser')
+        soup = BeautifulSoup(page, 'html.parser')
         description = soup.find('div', class_="description")
         for element in description.contents:
             if element.name == "font":
@@ -220,8 +224,9 @@ elif mode[0] == 'genEps':
         title = item.string.encode('utf-8')
         li = xbmcgui.ListItem(title)
         li.setInfo("video", {"plot": plot})
+        li.setProperty('IsPlayable', 'true')
         url = build_url({'mode': 'genSources', 'path': path})
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
     xbmcplugin.endOfDirectory(addon_handle)
 
 #Listing of video sources
@@ -261,7 +266,8 @@ elif mode[0] == 'genSources':
         response = Get("https://" + urlparse.urlparse(newUrl).hostname + "/a/m3u8/?ref=" + sourceList[index].getProperty("ref"))
         newPage = response.read()
         result = re.search("var m3u8url = '(.*?)'", newPage, flags=0)
-        playUrl(urllib.unquote(urllib.unquote(result.group(1))))
+        # playUrl(urllib.unquote(urllib.unquote(result.group(1))))
+        playResolvedUrl(urllib.unquote(urllib.unquote(result.group(1))))
 
 elif mode[0] == 'dailymotion':
     playUrl("plugin://plugin.video.dailymotion_com/?mode=playVideo&url=" + args['path'][0])

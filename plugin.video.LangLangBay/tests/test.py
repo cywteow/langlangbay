@@ -21,18 +21,10 @@ langlangbayUrl = "https://langlangbay.org"
 
 
 
-soup = BeautifulSoup(Get("https://arabnewsworld.com/cn200913/").read(), 'html.parser')
-description = soup.find('div', class_="description")
-plot = ""
-for element in description.contents:
-    if element.name == "font":
-        plot = plot[:-1]
-        plot += element.string.encode('utf-8').strip() + "\n"
-    elif element.name != "br":
-        plot += element.encode('utf-8').strip() + "\n"
+soup = BeautifulSoup(Get("https://www2.gogoanime.video/burn-the-witch-episode-3").read(), 'html.parser')
 
 f = open("test.html", "w")
-f.write(plot)
+f.write(soup.prettify("utf-8"))
 f.close()
     # if element.encode('utf-8') != "<br/>" || :
     #     plot += element.encode('utf-8')
