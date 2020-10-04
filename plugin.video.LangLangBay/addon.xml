@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.LangLangBay" name="LangLangBay" version="1.3.0" provider-name="cywteow">
+<addon id="plugin.video.langlangbay" name="LangLangBay" version="1.3.2" provider-name="cywteow">
     <requires>
         <import addon="xbmc.python" version="2.25.0"/>
         <import addon="script.module.routing" version="0.2.0"/>
@@ -25,7 +25,6 @@
         <disclaimer></disclaimer>
         <assets>
             <icon>resources/icon.png</icon>
-            <!-- <fanart>resources/fanart.jpg</fanart> -->
         </assets>
     </extension>
 </addon>
