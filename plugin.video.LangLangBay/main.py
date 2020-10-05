@@ -223,10 +223,11 @@ elif mode[0] == 'genEps':
 
         title = item.string.encode('utf-8')
         li = xbmcgui.ListItem(title)
-        li.setInfo("video", {"plot": plot})
+        li.setInfo("video", {"plot": plot, "title": title})
         li.setProperty('IsPlayable', 'true')
         url = build_url({'mode': 'genSources', 'path': path})
         xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 #Listing of video sources
