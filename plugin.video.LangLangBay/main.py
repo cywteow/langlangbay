@@ -1,24 +1,17 @@
-
-# import ptvsd
-# ptvsd.enable_attach(secret = '1')
-# ptvsd.wait_for_attach
-
-
 # -*- coding: utf-8 -*-
 import json
 import re
 import sys
-import urllib
 import base64
-
-import urllib2
 import urlparse
+import urllib
 import xbmc
 import xbmcgui
 import xbmcplugin
+import requests
 
-from pprint import pprint
 from bs4 import BeautifulSoup
+from resources.lib.database import InternalDatabase
 
 #init plugin
 print("sys.argv is ")
@@ -33,21 +26,34 @@ print(args)
 
 langlangbayUrl = "https://langlangbay.org"
 chinaqUrl = "https://chinaq.tv"
+imageUrl = "https://chinaq.img-ix.net/uploads/d"
+
 
 xbmcplugin.setContent(addon_handle, 'movies')
 
 def build_url(query):
-    return base_url + '?' + urllib.urlencode(query)
+    try:
+        return base_url + '?' + urllib.urlencode(query)
+    except:
+        return None
 
 def Get(url):
-    req = urllib2.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0)')
-    return urllib2.urlopen(req)
+    headers = {'user-agent': "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"}
+    req = requests.get(url, headers=headers)
+    req.encoding = 'utf-8'
+    if req.status_code == 200:
+        return req
+    else:
+        req = requests.get(chinaqUrl+urlparse.urlparse(url).path, headers=headers)
+        req.encoding = 'utf-8'
+        if req.status_code == 200:
+            return req
 
 def genList(url):
     # download pages
+    InternalDatabase.connect()
     response = Get(url)
-    page = response.read()
+    page = response.text
     soup = BeautifulSoup(page, 'html.parser')
     result = soup.find('ul', class_='drama_rich clearfix')
     liList = result.find_all('li', class_='sizing')
@@ -56,36 +62,71 @@ def genList(url):
     for item in liList:
         aTag = item.find('a')
         divTag = item.find('div', class_='title sizing')
-        li = xbmcgui.ListItem(divTag.string.encode('utf-8'))
-        newUrl = build_url({'mode': 'genEps', 'path': aTag['href'], 'domain': urlparse.urlparse(response.geturl()).hostname})
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
+        if chinaqUrl in aTag['href']:
+            location = urlparse.urlparse(aTag['href'])
+            path = location.path
+        else:
+            path = aTag['href']
+        drama = get_drama_detail(path)
+        li = xbmcgui.ListItem(drama['title'] + "("+item.find('div', class_="episode").find('a').string.encode('utf-8')+")")
+        li.setArt({'poster': drama.pop('poster')})
+        li.setInfo("video", drama)
+        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+
+        if newUrl is not None:
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
 
     for div in recentUpdatedDiv:
         aTag = div.find('a')
-        li = xbmcgui.ListItem(re.search("(.+)\(.*\)", aTag.string.encode('utf-8'), flags=0).group(1))
-        newUrl = build_url({'mode': 'genEps', 'path': aTag['href'], 'domain': urlparse.urlparse(response.geturl()).hostname})
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
+        if chinaqUrl in aTag['href']:
+            location = urlparse.urlparse(aTag['href'])
+            path = location.path
+        else:
+            path = aTag['href']
+        drama = get_drama_detail(path)
+        li = xbmcgui.ListItem(aTag.string)
+        li.setArt({'poster': drama.pop('poster')})
+        li.setInfo("video", drama)
+        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+
+        if newUrl is not None:
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
     
+    InternalDatabase.close()
     xbmcplugin.endOfDirectory(addon_handle)
 
 def genListForCountry(country):
     # download pages
+    InternalDatabase.connect()
     response = Get(langlangbayUrl + "/all.html")
-    page = response.read()
+    page = response.text
     soup = BeautifulSoup(page, 'html.parser')
     result = soup.find('ul', class_='drama_list').find_all('li')
 
     for item in result:
         if country in item['name']:
             aTag = item.find('a')
-            li = xbmcgui.ListItem(aTag.string.encode('utf-8'))
+            
             if chinaqUrl in aTag['href']:
-                location = urlparse.urlparse(aTag['href'].encode('utf-8'))
-                newUrl = build_url({'mode': 'genEps', 'path': location.path, 'domain': location.hostname})
+                location = urlparse.urlparse(aTag['href'])
+                path = location.path
+                drama = get_drama_detail(path)
+                li = xbmcgui.ListItem(drama['title'])
+                li.setArt({'poster': drama.pop('poster')})
+                li.setInfo("video", drama)
+                newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': location.hostname})
             else:
-                newUrl = build_url({'mode': 'genEps', 'path': aTag['href'], 'domain': urlparse.urlparse(response.geturl()).hostname})
-            xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
+                path = aTag['href']
+                drama = get_drama_detail(path)
+                li = xbmcgui.ListItem(drama['title'])
+                li.setArt({'poster': drama.pop('poster')})
+                li.setInfo("video", drama)
+                newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+            
+            if newUrl is not None:
+                xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
 
+    InternalDatabase.close()
     xbmcplugin.endOfDirectory(addon_handle)
 
 def playUrl(video_url):
@@ -100,20 +141,39 @@ def playResolvedUrl(url):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_handle, True, li)
 
-def getDescription(page):
+def getDescription(document):
     plot = ""
     try:
-        soup = BeautifulSoup(page, 'html.parser')
-        description = soup.find('div', class_="description")
+        description = document.find('div', class_="description")
         for element in description.contents:
             if element.name == "font":
                 plot = plot[:-1]
-                plot += element.string.encode('utf-8').strip() + "\n"
+                plot += element.string.strip() + "\n"
             elif element.name != "br":
-                plot += element.encode('utf-8').strip() + "\n"
+                plot += element.strip() + "\n"
     except:
         plot = "Error Reading Description"
     return plot
+
+def get_drama_detail(path):
+    drama = InternalDatabase.fetchone(path)
+
+    if drama is None:
+        response = Get(chinaqUrl+path)
+        response.encoding = 'utf-8'
+        document = BeautifulSoup(response.text, 'html.parser')
+        h1 = document.find('div', id='contain').find('h1')
+        title = h1.contents[0][:-3].strip()
+        img = imageUrl+path[:-1]+".jpg"
+        plot = getDescription(document)
+
+        InternalDatabase.add((path,
+                              img,
+                              title,
+                              plot))
+        drama = InternalDatabase.fetchone(path)
+
+    return drama
 
 
 # home page
@@ -206,10 +266,9 @@ elif mode[0] == 'genEps':
     #eg. path = /cn200827/
     newUrl = "https://" + args['domain'][0] + args['path'][0]
     response = Get(newUrl)
-    page = response.read()
+    page = response.text
     soup = BeautifulSoup(page, 'html.parser')
     aTag = soup.find('div', class_="items sizing").find_all('a')
-    plot = getDescription(page)
 
     for item in aTag:
         if item.has_attr('onclick'):
@@ -221,12 +280,13 @@ elif mode[0] == 'genEps':
         else:
             path = newUrl + item['href']
 
-        title = item.string.encode('utf-8')
+        title = item.string
         li = xbmcgui.ListItem(title)
-        li.setInfo("video", {"plot": plot, "title": title})
+        li.setInfo("video", {"title": title})
         li.setProperty('IsPlayable', 'true')
         url = build_url({'mode': 'genSources', 'path': path})
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
+        if url is not None:
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
     xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
@@ -236,7 +296,7 @@ elif mode[0] == 'genSources':
     sourceList = []
     newUrl = urllib.unquote(args['path'][0])
     response = Get(newUrl)
-    page = response.read()
+    page = response.text
     
     soup = BeautifulSoup(page, 'html.parser')
     aTag = soup.find('div', class_="sources").find_all('a')
@@ -265,28 +325,16 @@ elif mode[0] == 'genSources':
 
     if index != -1:
         response = Get("https://" + urlparse.urlparse(newUrl).hostname + "/a/m3u8/?ref=" + sourceList[index].getProperty("ref"))
-        newPage = response.read()
+        newPage = response.text
         result = re.search("var m3u8url = '(.*?)'", newPage, flags=0)
         # playUrl(urllib.unquote(urllib.unquote(result.group(1))))
         playResolvedUrl(urllib.unquote(urllib.unquote(result.group(1))))
 
-elif mode[0] == 'dailymotion':
-    playUrl("plugin://plugin.video.dailymotion_com/?mode=playVideo&url=" + args['path'][0])
-
-elif mode[0] == 'youtube':
-    playUrl("plugin://plugin.video.youtube/play/?video_id=" + args['path'][0])
-
 elif mode[0] == 'm3u8':
     playUrl(urllib.unquote(urllib.unquote(args['path'][0])))
-    
-elif mode[0] == 'rapidvideo':
-    # download pages
-    page = Get('https://www.rapidvideo.com/e/' + args['path'][0] + '&q=720p')
-    # init regex search
-    matchObj = re.search("src=\"(https:\/\/.*?mp4)\"", page, flags=0)
-    # get video url
-    playUrl(matchObj.group(1))
 
 else:
     xbmcgui.Dialog().ok(u'is developing'.encode('utf-8'),args['path'][0].encode('utf-8'))
     print ('unsupport link => ' + args['path'][0].encode('utf-8'))
+
+
