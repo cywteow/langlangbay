@@ -95,18 +95,43 @@ def genList(url):
     InternalDatabase.close()
     xbmcplugin.endOfDirectory(addon_handle)
 
-def genListForCountry(country):
+def genListForCountry(country=None):
     # download pages
     InternalDatabase.connect()
-    response = Get(langlangbayUrl + "/all.html")
+    if country is None:
+        response = Get(langlangbayUrl + "/new.html")
+    else:
+        response = Get(langlangbayUrl + "/all.html")
     page = response.text
     soup = BeautifulSoup(page, 'html.parser')
     result = soup.find('ul', class_='drama_list').find_all('li')
 
     for item in result:
-        if country in item['name']:
+        if country is not None:
+            if country in item['name']:
+                aTag = item.find('a')
+                
+                if chinaqUrl in aTag['href']:
+                    location = urlparse.urlparse(aTag['href'])
+                    path = location.path
+                    drama = get_drama_detail(path)
+                    li = xbmcgui.ListItem(drama['title'])
+                    li.setArt({'poster': drama.pop('poster')})
+                    li.setInfo("video", drama)
+                    newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': location.hostname})
+                else:
+                    path = aTag['href']
+                    drama = get_drama_detail(path)
+                    li = xbmcgui.ListItem(drama['title'])
+                    li.setArt({'poster': drama.pop('poster')})
+                    li.setInfo("video", drama)
+                    newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+                
+                if newUrl is not None:
+                    xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
+        else:
             aTag = item.find('a')
-            
+                
             if chinaqUrl in aTag['href']:
                 location = urlparse.urlparse(aTag['href'])
                 path = location.path
@@ -183,6 +208,10 @@ if mode is None:
     # url = build_url({'mode': 'List'})
     # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
+    li = xbmcgui.ListItem(u'Recently Added'.encode('utf-8'))
+    url = build_url({'mode': 'newUpdated'})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+
     li = xbmcgui.ListItem(u'Recent Jp'.encode('utf-8'))
     url = build_url({'mode': 'J-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
@@ -233,6 +262,9 @@ if mode is None:
 
 elif mode[0] == 'Recently update':
     genList(langlangbayUrl + "/update.html")
+
+elif mode[0] == 'newUpdated':
+    genListForCountry()
 
 elif mode[0] == 'All Jp':
     genListForCountry("jp")
