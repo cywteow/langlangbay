@@ -2,30 +2,31 @@
 import json
 import re
 import sys
-import urllib
+
 import base64
-import urllib2
-import urlparse
-
-from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urlencode, unquote, parse_qs
 
 
-def Get(url):
-    req = urllib2.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0)')
-    response = urllib2.urlopen(req)
-    return response
+# def Get(url):
+#     req = urllib2.Request(url)
+#     req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:5.0)')
+#     response = urllib2.urlopen(req)
+#     return response
 
 langlangbayUrl = "https://langlangbay.org"
 
+base_url = 'plugin://plugin.video.langlangbay/'
+
+print('plugin://plugin.video.langlangbay/' + '?' +urlencode({'mode': 'C-List'}))
 
 
 
-soup = BeautifulSoup(Get("https://www2.gogoanime.video/burn-the-witch-episode-3").read(), 'html.parser')
 
-f = open("test.html", "w")
-f.write(soup.prettify("utf-8"))
-f.close()
+# soup = BeautifulSoup(Get("https://www2.gogoanime.video/burn-the-witch-episode-3").read(), 'html.parser')
+
+# f = open("test.html", "w")
+# f.write(soup.prettify("utf-8"))
+# f.close()
     # if element.encode('utf-8') != "<br/>" || :
     #     plot += element.encode('utf-8')
 

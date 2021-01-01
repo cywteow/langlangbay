@@ -3,8 +3,7 @@ import json
 import re
 import sys
 import base64
-import urlparse
-import urllib
+from urllib.parse import urlparse, urlencode, unquote, parse_qs
 import xbmc
 import xbmcgui
 import xbmcplugin
@@ -20,7 +19,7 @@ base_url = sys.argv[0]
 # print("BaseUrl is "+ base_url)
 addon_handle = int(sys.argv[1])
 # print("addon_handle is "+ sys.argv[1])
-args = urlparse.parse_qs(sys.argv[2][1:])
+args = parse_qs(sys.argv[2][1:])
 print("args is ")
 print(args)
 
@@ -33,7 +32,7 @@ xbmcplugin.setContent(addon_handle, 'movies')
 
 def build_url(query):
     try:
-        return base_url + '?' + urllib.urlencode(query)
+        return base_url + '?' + urlencode(query)
     except:
         return None
 
@@ -44,7 +43,7 @@ def Get(url):
     if req.status_code == 200:
         return req
     else:
-        req = requests.get(chinaqUrl+urlparse.urlparse(url).path, headers=headers)
+        req = requests.get(chinaqUrl+urlparse(url).path, headers=headers)
         req.encoding = 'utf-8'
         if req.status_code == 200:
             return req
@@ -63,15 +62,15 @@ def genList(url):
         aTag = item.find('a')
         divTag = item.find('div', class_='title sizing')
         if chinaqUrl in aTag['href']:
-            location = urlparse.urlparse(aTag['href'])
+            location = urlparse(aTag['href'])
             path = location.path
         else:
             path = aTag['href']
         drama = get_drama_detail(path)
-        li = xbmcgui.ListItem(drama['title'] + "("+item.find('div', class_="episode").find('a').string.encode('utf-8')+")")
+        li = xbmcgui.ListItem(drama['title'] + "("+item.find('div', class_="episode").find('a').string+")")
         li.setArt({'poster': drama.pop('poster')})
         li.setInfo("video", drama)
-        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse(response.url).hostname})
 
         if newUrl is not None:
             xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
@@ -79,7 +78,7 @@ def genList(url):
     for div in recentUpdatedDiv:
         aTag = div.find('a')
         if chinaqUrl in aTag['href']:
-            location = urlparse.urlparse(aTag['href'])
+            location = urlparse(aTag['href'])
             path = location.path
         else:
             path = aTag['href']
@@ -87,7 +86,7 @@ def genList(url):
         li = xbmcgui.ListItem(aTag.string)
         li.setArt({'poster': drama.pop('poster')})
         li.setInfo("video", drama)
-        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+        newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse(response.url).hostname})
 
         if newUrl is not None:
             xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
@@ -112,7 +111,7 @@ def genListForCountry(country=None):
                 aTag = item.find('a')
                 
                 if chinaqUrl in aTag['href']:
-                    location = urlparse.urlparse(aTag['href'])
+                    location = urlparse(aTag['href'])
                     path = location.path
                     drama = get_drama_detail(path)
                     li = xbmcgui.ListItem(drama['title'])
@@ -125,7 +124,7 @@ def genListForCountry(country=None):
                     li = xbmcgui.ListItem(drama['title'])
                     li.setArt({'poster': drama.pop('poster')})
                     li.setInfo("video", drama)
-                    newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+                    newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse(response.url).hostname})
                 
                 if newUrl is not None:
                     xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
@@ -133,7 +132,7 @@ def genListForCountry(country=None):
             aTag = item.find('a')
                 
             if chinaqUrl in aTag['href']:
-                location = urlparse.urlparse(aTag['href'])
+                location = urlparse(aTag['href'])
                 path = location.path
                 drama = get_drama_detail(path)
                 li = xbmcgui.ListItem(drama['title'])
@@ -146,7 +145,7 @@ def genListForCountry(country=None):
                 li = xbmcgui.ListItem(drama['title'])
                 li.setArt({'poster': drama.pop('poster')})
                 li.setInfo("video", drama)
-                newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse.urlparse(response.url).hostname})
+                newUrl = build_url({'mode': 'genEps', 'path': path, 'domain': urlparse(response.url).hostname})
             
             if newUrl is not None:
                 xbmcplugin.addDirectoryItem(handle=addon_handle, url=newUrl, listitem=li, isFolder=True)
@@ -204,57 +203,57 @@ def get_drama_detail(path):
 # home page
 mode = args.get('mode', None)
 if mode is None:
-    # li = xbmcgui.ListItem(u'List'.encode('utf-8'))
+    # li = xbmcgui.ListItem(u'List')
     # url = build_url({'mode': 'List'})
     # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Recently Added'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recently Added')
     url = build_url({'mode': 'newUpdated'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Recent Jp'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent Jp')
     url = build_url({'mode': 'J-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Recent Kr'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent Kr')
     url = build_url({'mode': 'K-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Recent CN'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent CN')
     url = build_url({'mode': 'C-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'Recent TW'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'Recent TW')
     url = build_url({'mode': 'T-List'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'All Jp'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'All Jp')
     url = build_url({'mode': 'All Jp'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'All Kr'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'All Kr')
     url = build_url({'mode': 'All Kr'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'All Cn'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'All Cn')
     url = build_url({'mode': 'All Cn'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'All Tw'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'All Tw')
     url = build_url({'mode': 'All Tw'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    li = xbmcgui.ListItem(u'All Hk'.encode('utf-8'))
+    li = xbmcgui.ListItem(u'All Hk')
     url = build_url({'mode': 'All Hk'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
 
 
-    # li = xbmcgui.ListItem(u'Search'.encode('utf-8'))
+    # li = xbmcgui.ListItem(u'Search')
     # url = build_url({'mode': 'Search'})
     # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    # li = xbmcgui.ListItem(u'Test'.encode('utf-8'))
+    # li = xbmcgui.ListItem(u'Test')
     # url = build_url({'mode': 'Test'})
     # xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
@@ -326,7 +325,7 @@ elif mode[0] == 'genEps':
 elif mode[0] == 'genSources':
     #eg. path = https://langlangbay.org/cn200827/4.html
     sourceList = []
-    newUrl = urllib.unquote(args['path'][0])
+    newUrl = unquote(args['path'][0])
     response = Get(newUrl)
     page = response.text
     
@@ -356,17 +355,16 @@ elif mode[0] == 'genSources':
     index = xbmcgui.Dialog().select("Choose Source", sourceList)
 
     if index != -1:
-        response = Get("https://" + urlparse.urlparse(newUrl).hostname + "/a/m3u8/?ref=" + sourceList[index].getProperty("ref"))
+        response = Get("https://" + urlparse(newUrl).hostname + "/a/m3u8/?ref=" + sourceList[index].getProperty("ref"))
         newPage = response.text
         result = re.search("var m3u8url = '(.*?)'", newPage, flags=0)
-        # playUrl(urllib.unquote(urllib.unquote(result.group(1))))
-        playResolvedUrl(urllib.unquote(urllib.unquote(result.group(1))))
+        playResolvedUrl(unquote(unquote(result.group(1))))
 
 elif mode[0] == 'm3u8':
-    playUrl(urllib.unquote(urllib.unquote(args['path'][0])))
+    playUrl(unquote(unquote(args['path'][0])))
 
 else:
-    xbmcgui.Dialog().ok(u'is developing'.encode('utf-8'),args['path'][0].encode('utf-8'))
-    print ('unsupport link => ' + args['path'][0].encode('utf-8'))
+    xbmcgui.Dialog().ok(u'is developing',args['path'][0])
+    print ('unsupport link => ' + args['path'][0])
 
 
